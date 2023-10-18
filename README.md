@@ -1,4 +1,4 @@
-# elv.NET
+# elv-sample-dotnet
 dotnet runtimes for the Eluvio content fabric
 
 ## install .net
