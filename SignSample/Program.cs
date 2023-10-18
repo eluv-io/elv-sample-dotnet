@@ -10,8 +10,8 @@ namespace SignSample;
 
 class Program
 {
-    /// This example performas a number of operations in order to create content on both the blockchain
-    /// and to mirror perform the necessary steps to include such content in the Eluvio Content Fabric
+    /// This example performs a number of operations in order to create content on the blockchain
+    /// and to mirror those changes to the content fabric
     /// The sequence of steps are as follows
     /// Given the following input:
     ///   - private key 
