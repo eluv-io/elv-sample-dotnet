@@ -1,0 +1,46 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "SignSample",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/SignSample/bin/Debug/net6.0/SignSample.dll",
+            "args": [
+                "-e",
+                "https://demov3.net955210.contentfabric.io/",
+                "-c",
+                "0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3",
+                "-t",
+                "0x0a5bc8d97be691970df876534a3433901fafe5d9",
+                "-l",
+                "0x76d5287501f6d8e3b72AA34545C9cbf951702C74"
+            ],
+            "cwd": "${workspaceFolder}/SignSample",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
+            // Use IntelliSense to find out which attributes exist for C# debugging
+            // Use hover for the description of the existing attributes
+            // For further information visit https://github.com/dotnet/vscode-csharp/blob/main/debugger-launchjson.md
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/libtest/bin/Debug/net6.0/libtest.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/libtest",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ]
+}
