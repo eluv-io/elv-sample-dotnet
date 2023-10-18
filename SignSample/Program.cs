@@ -126,7 +126,7 @@ class Program
                 string? v = option.Value();
                 if (v == null || v == "")
                 {
-                    Console.WriteLine("Option {0} missing", optionVals[iOption]);
+                    Console.WriteLine("Option \"{0}\" missing", optionsList[iOption].Description);
                     return -1;
                 }
                 optionVals[iOption] = v;

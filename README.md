@@ -11,7 +11,11 @@ dotnet build elv-sample-dotnet.sln  -c Debug
 dotnet clean elv-sample-dotnet.sln
 
 ## running
+```
 ./SignSample/bin/Debug/net6.0/SignSample -e "https://demov3.net955210.contentfabric.io/" -c "0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3" -p "private_key" -t "0x0a5bc8d97be691970df876534a3433901fafe5d9" -l "0x76d5287501f6d8e3b72AA34545C9cbf951702C74"
+``````
+
+**Output:** </br>
 content type = 0x0a5bc8d97be691970df876534a3433901fafe5d9
 content = 0xD4988F0DED01790D974071907f4aE32E1Ffc44b4 QID = iq__3xnZN9DURfPk44GrbWwHBuH6sdVm
 transaction hash = 0xf19005128623726aba1c0ab75b1ffaaabc4ad2cd1fd5fc8c6c0c87b8ec71aaca
