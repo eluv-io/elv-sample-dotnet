@@ -29,40 +29,41 @@ class Program
     static async Task<bool> DoSampleAsync(BlockchainPrimitives bcp)
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
-        // This is content type 'ABR Master'
         var ct = bcp.contentTypeAddress;
-        Console.WriteLine("content type = {0}", ct);
-        // This is Lib Test_Lib
         var libAddress = bcp.libraryAddress;
         var libid = BlockchainUtils.LibFromBlockchainAddress(libAddress);
-
+        // Instantiate abi for space using user provided values for the qfab http endpoint and the base contract address 
         var spaceService = new BaseContentSpaceService(bcp.web3, bcp.baseContract);
 
         var content = await BlockchainUtils.CreateContent(spaceService, ct, libAddress);
-        Console.WriteLine("content = {0} QID = {1}", content, BlockchainUtils.QIDFromBlockchainAddress(content));
-        var newContentService = new BaseContentService(bcp.web3, content);
-
-
-        var res = await newContentService.UpdateRequestRequestAndWaitForReceiptAsync();
         var qid = BlockchainUtils.QIDFromBlockchainAddress(content);
-        Console.WriteLine(String.Format("transaction hash = {0}", res.TransactionHash));
+        Console.WriteLine("new content = {0} fabricID(QID) = {1}", content, qid);
+        // Instantiate content using the new content address 
+        var newContentService = new BaseContentService(bcp.web3, content);
+        // Initiate the UpdateRequest
+        var res = await newContentService.UpdateRequestRequestAndWaitForReceiptAsync();
+        Console.WriteLine(String.Format("transaction hash for UpdateRequest= {0}", res.TransactionHash));
+        // get byte rep of transaction hash
         byte[] txhBytes = BlockchainUtils.DecodeString(res.TransactionHash);
         Dictionary<string, object> updateJson = new()
                 {
                     { "spc", BlockchainUtils.SpaceFromBlockchainAddress("0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3") },
                     { "txh", Convert.ToBase64String(txhBytes) }
                 };
+        // Make token accepts a dictionary to add to the json token also create a signed json transaction token atxsj_
         var token = bcp.MakeToken("atxsj_", updateJson);
-        Console.WriteLine(" Token = {0} \n content = {1}\n fabid = {2}", token, content, qid);
+        Console.WriteLine(" Token = {0}", token);
+        // Call qfab's http handler and request edit on the new qid with the newly constructed token
         var ec = await bcp.CallEditContent(token, libid, qid);
-        Console.WriteLine(String.Format("Edit returns: content {0}", ec));
+        // parse json result and extract the write_token
         JObject ecValues = JObject.Parse(ec);
         var qwt = ecValues["write_token"].ToString();
         Console.WriteLine("write_token = {0}", qwt);
+        // new meta to add to our content object
         string newMeta = "{\"key1\":{\"subkey1\":[\"value1\", \"value2\", \"value3\"]}}";
-
+        // Call qfabs http handler for update meta using the newMeta to add
         await bcp.UpdateMetadata(token, libid, qwt, JObject.Parse(newMeta));
-
+        // Call qfabs http handler to Finalize our new content
         var fin = await bcp.FinalizeContent(token, libid, qwt);
         Console.WriteLine("finalized output = {0}", fin);
         JObject finVals = JObject.Parse(fin);
@@ -71,8 +72,9 @@ class Program
         var decHash = BlockchainUtils.BlockchainFromFabric(hash);
         // decHash == content
         Console.WriteLine("hash = {0} dec = {1}", hash, decHash);
+        // Instantiate a new Content service using the blockchain address from the hash from the return of FinalizeContent
         var commitService = new BaseContentService(bcp.web3, decHash);
-
+        // Call Commit on the new qfab hash
         var commitReceipt = BlockchainUtils.Commit(commitService, hash);
         var cpe = commitReceipt.Logs.DecodeAllEvents<CommitPendingEventDTO>();
         if (cpe.Count > 0)
@@ -109,10 +111,10 @@ class Program
         /// Reasonable sample values are provided in the usage message
         /// The password will need to be provided at runtime to avoid leaking in code.
         var passwordOption = app.Option("-p|--pwd <PASSWORD>", "The password", CommandOptionType.SingleValue);
-        var endpoint = app.Option("-e|--ep <EndPoint>", "eth endpoint eg https://demov3.net955210.contentfabric.io/", CommandOptionType.SingleValue);
-        var contractAdress = app.Option("-c|--contract <Contract>", "Contract address eg \"0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3\"", CommandOptionType.SingleValue);
-        var contentTypeAddress = app.Option("-t|--type <Type>", "Content Type address eg \"0x0a5bc8d97be691970df876534a3433901fafe5d9\"", CommandOptionType.SingleValue);
-        var LibraryAddress = app.Option("-l|--library <Library>", "Library address eg \"0x76d5287501f6d8e3b72AA34545C9cbf951702C74\"", CommandOptionType.SingleValue);
+        var endpoint = app.Option("-e|--ep <EndPoint>", "eth endpoint eg -e https://demov3.net955210.contentfabric.io/", CommandOptionType.SingleValue);
+        var contractAdress = app.Option("-c|--contract <Contract>", "Contract address eg -c \"0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3\"", CommandOptionType.SingleValue);
+        var contentTypeAddress = app.Option("-t|--type <Type>", "Content Type address eg -t \"0x0a5bc8d97be691970df876534a3433901fafe5d9\"", CommandOptionType.SingleValue);
+        var LibraryAddress = app.Option("-l|--library <Library>", "Library address eg -l \"0x76d5287501f6d8e3b72AA34545C9cbf951702C74\"", CommandOptionType.SingleValue);
 
 
         app.OnExecute(() =>
