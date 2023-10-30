@@ -26,17 +26,17 @@ class Program
     ///  5) Using write token from step 4, form some test metadata and set it on the write token calling update meta
     ///  6) Finalize the content
     ///  7) With the has acquired from finalization, call commit on the blockchain
-    static async Task<bool> DoSampleAsync(BlockchainPrimitives bcp)
+    static async Task<bool> DoSampleAsync(ContentFabricPrimitives bcp)
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         var ct = bcp.contentTypeAddress;
         var libAddress = bcp.libraryAddress;
-        var libid = BlockchainUtils.LibFromBlockchainAddress(libAddress);
+        var libid = ContentFabricUtils.LibFromBlockchainAddress(libAddress);
         // Instantiate abi for space using user provided values for the qfab http endpoint and the base contract address 
         var spaceService = new BaseContentSpaceService(bcp.web3, bcp.baseContract);
 
-        var content = await BlockchainUtils.CreateContent(spaceService, ct, libAddress);
-        var qid = BlockchainUtils.QIDFromBlockchainAddress(content);
+        var content = await ContentFabricUtils.CreateContent(spaceService, ct, libAddress);
+        var qid = ContentFabricUtils.QIDFromBlockchainAddress(content);
         Console.WriteLine("new content = {0} fabricID(QID) = {1}", content, qid);
         // Instantiate content using the new content address 
         var newContentService = new BaseContentService(bcp.web3, content);
@@ -44,10 +44,10 @@ class Program
         var res = await newContentService.UpdateRequestRequestAndWaitForReceiptAsync();
         Console.WriteLine(String.Format("transaction hash for UpdateRequest= {0}", res.TransactionHash));
         // get byte rep of transaction hash
-        byte[] txhBytes = BlockchainUtils.DecodeString(res.TransactionHash);
+        byte[] txhBytes = ContentFabricUtils.DecodeString(res.TransactionHash);
         Dictionary<string, object> updateJson = new()
                 {
-                    { "spc", BlockchainUtils.SpaceFromBlockchainAddress("0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3") },
+                    { "spc", ContentFabricUtils.SpaceFromBlockchainAddress("0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3") },
                     { "txh", Convert.ToBase64String(txhBytes) }
                 };
         // Make token accepts a dictionary to add to the json token also create a signed json transaction token atxsj_
@@ -69,13 +69,12 @@ class Program
         JObject finVals = JObject.Parse(fin);
         var hash = finVals["hash"].ToString();
 
-        var decHash = BlockchainUtils.BlockchainFromFabric(hash);
+        var decHash = ContentFabricUtils.BlockchainFromFabric(hash);
         // decHash == content
         Console.WriteLine("hash = {0} dec = {1}", hash, decHash);
         // Instantiate a new Content service using the blockchain address from the hash from the return of FinalizeContent
-        var commitService = new BaseContentService(bcp.web3, decHash);
         // Call Commit on the new qfab hash
-        var commitReceipt = BlockchainUtils.Commit(commitService, hash);
+        var commitReceipt = ContentFabricUtils.Commit(newContentService, hash);
         var cpe = commitReceipt.Logs.DecodeAllEvents<CommitPendingEventDTO>();
         if (cpe.Count > 0)
         {
@@ -91,7 +90,7 @@ class Program
     {
         try
         {
-            BlockchainPrimitives bcp = new(pwd, ep, contentTypeAddress, libraryAddress);
+            ContentFabricPrimitives bcp = new(pwd, ep, contentTypeAddress, libraryAddress);
             var f = DoSampleAsync(bcp);
             f.Wait();
         }

@@ -40,7 +40,7 @@ namespace libtest
                 {
                     Assert.Fail("Need a password!!");
                 }
-                BlockchainPrimitives bcp = new(pwd, "demov3", "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c", "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD");
+                ContentFabricPrimitives bcp = new(pwd, "demov3", "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c", "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD");
                 Console.OutputEncoding = System.Text.Encoding.UTF8;
                 Debug.WriteLine(string.Format("MyFunkyKey = {0}", bcp.Key));
                 var spaceID = "66699ab88";
@@ -118,17 +118,17 @@ namespace libtest
                 {
                     Assert.Fail("Need a password!!");
                 }
-                BlockchainPrimitives bcp = new(pwd, "demov3", "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c", "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD");
+                ContentFabricPrimitives bcp = new(pwd, "demov3", "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c", "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD");
                 Console.OutputEncoding = System.Text.Encoding.UTF8;
                 var spaceService = new BaseContentSpaceService(bcp.web3, bcp.baseContract);
 
                 var ct = "0x0a5bc8d97be691970df876534a3433901fafe5d9";
                 TestContext.Progress.WriteLine("content type = {0}", ct);
                 var libAddress = "0x76d5287501f6d8e3b72AA34545C9cbf951702C74";
-                var libid = BlockchainUtils.LibFromBlockchainAddress(libAddress);
-                var content = BlockchainUtils.CreateContent(spaceService, ct, libAddress);
+                var libid = ContentFabricUtils.LibFromBlockchainAddress(libAddress);
+                var content = ContentFabricUtils.CreateContent(spaceService, ct, libAddress);
                 content.Wait();
-                TestContext.Progress.WriteLine("content = {0} QID = {1}", content.Result, BlockchainUtils.QIDFromBlockchainAddress(content.Result));
+                TestContext.Progress.WriteLine("content = {0} QID = {1}", content.Result, ContentFabricUtils.QIDFromBlockchainAddress(content.Result));
                 Assert.Multiple(() =>
                 {
                     Assert.That(content.IsCompletedSuccessfully);
@@ -137,12 +137,12 @@ namespace libtest
                 var newContentService = new BaseContentService(bcp.web3, content.Result);
                 var res = newContentService.UpdateRequestRequestAndWaitForReceiptAsync();
                 res.Wait();
-                var qid = BlockchainUtils.QIDFromBlockchainAddress(content.Result);
+                var qid = ContentFabricUtils.QIDFromBlockchainAddress(content.Result);
                 Console.WriteLine(String.Format("transaction hash = {0}", res.Result.TransactionHash));
-                byte[] txhBytes = BlockchainUtils.DecodeString(res.Result.TransactionHash);
+                byte[] txhBytes = ContentFabricUtils.DecodeString(res.Result.TransactionHash);
                 Dictionary<string, object> updateJson = new()
                 {
-                    { "spc", BlockchainUtils.SpaceFromBlockchainAddress("0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3") },
+                    { "spc", ContentFabricUtils.SpaceFromBlockchainAddress("0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3") },
                     { "txh", Convert.ToBase64String(txhBytes) }
                 };
                 var token = bcp.MakeToken("atxsj_", updateJson);
@@ -169,13 +169,13 @@ namespace libtest
                 Assert.That(finVals["hash"], Is.Not.Null);
                 var hash = finVals["hash"].ToString();
 
-                var decHash = BlockchainUtils.BlockchainFromFabric(hash);
+                var decHash = ContentFabricUtils.BlockchainFromFabric(hash);
                 Assert.That(decHash[2..], Is.EqualTo(MakeUpper(content.Result[2..])));
                 // decHash == content
                 Console.WriteLine("hash = {0} dec = {1}", hash, decHash);
                 var commitService = new BaseContentService(bcp.web3, decHash);
 
-                var commitReceipt = BlockchainUtils.Commit(commitService, hash);
+                var commitReceipt = ContentFabricUtils.Commit(commitService, hash);
                 var cpe = commitReceipt.Logs.DecodeAllEvents<Elv.NET.Contracts.BaseContentSpace.ContractDefinition.CommitPendingEventDTO>();
                 if (cpe.Count > 0)
                 {
@@ -185,7 +185,7 @@ namespace libtest
                 {
                     Console.WriteLine("commitReceipt status = {0}, No Events", commitReceipt.Status);
                 }
-                //BlockchainPrimitives.
+                //ContentFabricPrimitives.
 
             }
             catch (Exception e)

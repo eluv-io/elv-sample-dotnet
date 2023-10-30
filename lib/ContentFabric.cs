@@ -138,7 +138,7 @@ namespace Eluvio
 
     }
 
-    public class BlockchainUtils
+    public class ContentFabricUtils
     {
         public static string FabricIdFromBlckchainAdress(string prefix, string bcAdress)
         {
@@ -269,23 +269,23 @@ namespace Eluvio
 
     }
 
-    public class BlockchainPrimitives : HttpHelper
+    public class ContentFabricPrimitives : HttpHelper
     {
 
         private void CommonConstruct(string contentTypeAddress, string libraryAddress)
         {
             account = new Nethereum.Web3.Accounts.Account(this.Key);
             web3 = new Web3(this.account, EthURL);
-            baseContract = BlockchainUtils.BlockchainFromFabric(QspaceID);
-            this.contentTypeAddress = BlockchainUtils.BlockchainFromFabric(contentTypeAddress);
-            this.libraryAddress = BlockchainUtils.BlockchainFromFabric(libraryAddress);
+            baseContract = ContentFabricUtils.BlockchainFromFabric(QspaceID);
+            this.contentTypeAddress = ContentFabricUtils.BlockchainFromFabric(contentTypeAddress);
+            this.libraryAddress = ContentFabricUtils.BlockchainFromFabric(libraryAddress);
         }
-        public BlockchainPrimitives(string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
+        public ContentFabricPrimitives(string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
         {
             Key = EthECKey.GenerateKey().GetPrivateKeyAsBytes().ToHex();
             CommonConstruct(contentTypeAddress, libraryAddress);
         }
-        public BlockchainPrimitives(string key, string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
+        public ContentFabricPrimitives(string key, string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
         {
             Key = key;
             CommonConstruct(contentTypeAddress, libraryAddress);
@@ -299,12 +299,12 @@ namespace Eluvio
             jsonToken.Add("adr", ethECKey.GetPublicAddressAsBytes());
             var tok = System.Text.Json.JsonSerializer.Serialize(jsonToken);
             var strToken = tok;
-            byte[] hashedBytes = BlockchainUtils.DecodeString(new Sha3Keccack().CalculateHash(strToken));
+            byte[] hashedBytes = ContentFabricUtils.DecodeString(new Sha3Keccack().CalculateHash(strToken));
 
             byte[] signature = Array.Empty<byte>();
             if (prefix[3] == 's')
             {
-                signature = BlockchainUtils.SignMessage(ethECKey, hashedBytes);
+                signature = ContentFabricUtils.SignMessage(ethECKey, hashedBytes);
             }
             // // Signing
             byte[] concat = signature.Concat(Encoding.UTF8.GetBytes(strToken)).ToArray();
