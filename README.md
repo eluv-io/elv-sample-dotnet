@@ -12,7 +12,7 @@ dotnet clean elv-sample-dotnet.sln
 
 ## running
 ```
-./SignSample/bin/Debug/net6.0/SignSample -e "https://demov3.net955210.contentfabric.io/" -c "0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3" -p "private_key" -t "0x0a5bc8d97be691970df876534a3433901fafe5d9" -l "0x76d5287501f6d8e3b72AA34545C9cbf951702C74"
+./SignSample/bin/Debug/net6.0/SignSample -n "demov3" -p "private_key" -t "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c" -l "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD"
 ``````
 
 **Output:** </br>

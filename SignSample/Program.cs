@@ -87,11 +87,11 @@ class Program
         }
         return true;
     }
-    static int DoSample(string pwd, string ep, string contractAddr, string contentTypeAddress, string libraryAddress)
+    static int DoSample(string pwd, string ep, string contentTypeAddress, string libraryAddress)
     {
         try
         {
-            BlockchainPrimitives bcp = new(pwd, ep, contractAddr, contentTypeAddress, libraryAddress);
+            BlockchainPrimitives bcp = new(pwd, ep, contentTypeAddress, libraryAddress);
             var f = DoSampleAsync(bcp);
             f.Wait();
         }
@@ -110,17 +110,16 @@ class Program
 
         /// Reasonable sample values are provided in the usage message
         /// The password will need to be provided at runtime to avoid leaking in code.
-        var passwordOption = app.Option("-p|--pwd <PASSWORD>", "The password", CommandOptionType.SingleValue);
-        var endpoint = app.Option("-e|--ep <EndPoint>", "eth endpoint eg -e https://demov3.net955210.contentfabric.io/", CommandOptionType.SingleValue);
-        var contractAdress = app.Option("-c|--contract <Contract>", "Contract address eg -c \"0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3\"", CommandOptionType.SingleValue);
+        var passwordOption = app.Option("-p|--private <PRIVATE_KEY>", "The private key", CommandOptionType.SingleValue);
+        var network = app.Option("-n|--network <network>", "eg -n demov3", CommandOptionType.SingleValue);
         var contentTypeAddress = app.Option("-t|--type <Type>", "Content Type address eg -t \"0x0a5bc8d97be691970df876534a3433901fafe5d9\"", CommandOptionType.SingleValue);
         var LibraryAddress = app.Option("-l|--library <Library>", "Library address eg -l \"0x76d5287501f6d8e3b72AA34545C9cbf951702C74\"", CommandOptionType.SingleValue);
 
 
         app.OnExecute(() =>
         {
-            List<CommandOption> optionsList = new() { passwordOption, endpoint, contractAdress, contentTypeAddress, LibraryAddress };
-            List<string> optionVals = new() { "", "", "", "", "" };
+            List<CommandOption> optionsList = new() { passwordOption, network, contentTypeAddress, LibraryAddress };
+            List<string> optionVals = new() { "", "", "", "" };
             var iOption = 0;
             // Access the elements in the list
             foreach (var option in optionsList)
@@ -135,7 +134,7 @@ class Program
                 iOption++;
             }
 
-            return DoSample(optionVals[0], optionVals[1], optionVals[2], optionVals[3], optionVals[4]);
+            return DoSample(optionVals[0], optionVals[1], optionVals[2], optionVals[3]);
         });
 
         app.Execute(args);

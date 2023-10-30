@@ -20,16 +20,27 @@ namespace Eluvio
     /// There are static methods to GET POST and PUT various urls as the qfab api expects
     public class HttpHelper
     {
+        private static readonly Dictionary<string, string> networks = new()
+        {
+            {"main", "https://main.net955305.contentfabric.io/config"},
+            {"demov3", "https://demov3.net955210.contentfabric.io/config"}
+        };
         delegate Task<HttpResponseMessage> PostCallDelegate(HttpClient client, string url, string token, HttpContent content);
-        public HttpHelper(string mainNet)
+        public HttpHelper(string network)
         {
             client = new();
+            if (network != "main" && network != "demov3")
+            {
+                network = "demov3";
+            }
+            var mainNet = HttpHelper.networks[network];
             //
-            var restResult = CallGet(client, mainNet + "config", "");
+            var restResult = CallGet(client, mainNet, "");
             restResult.Wait();
             JObject jsonObject = JObject.Parse(restResult.Result);
             currentNode = jsonObject["network"]["seed_nodes"]["fabric_api"][0].ToString();
             EthURL = jsonObject["network"]["seed_nodes"]["ethereum_api"][0].ToString();
+            QspaceID = jsonObject["qspace"]["id"].ToString();
         }
         private static async Task<string> CallHttp(HttpClient client, string url, string token, HttpContent content, JObject metadata, Delegate delCall)
         {
@@ -122,6 +133,8 @@ namespace Eluvio
         public string EthURL { get; set; }
         private readonly HttpClient client;
 
+        public string QspaceID { get; set; }
+
 
     }
 
@@ -161,6 +174,10 @@ namespace Eluvio
         {
             fabAdress = fabAdress[4..];
             var hashBytes = Base58.Bitcoin.Decode(fabAdress);
+            if (hashBytes.Length == 20)
+            {
+                return EncodeBytes(hashBytes);
+            }
             DecodeUvarint(hashBytes[32..], out int bytesRead);
             var idOffset = 32 + bytesRead;
             var id = hashBytes[idOffset..];
@@ -255,23 +272,23 @@ namespace Eluvio
     public class BlockchainPrimitives : HttpHelper
     {
 
-        private void CommonConstruct(string contractAddress, string contentTypeAddress, string libraryAddress)
+        private void CommonConstruct(string contentTypeAddress, string libraryAddress)
         {
             account = new Nethereum.Web3.Accounts.Account(this.Key);
             web3 = new Web3(this.account, EthURL);
-            baseContract = contractAddress;
-            this.contentTypeAddress = contentTypeAddress;
-            this.libraryAddress = libraryAddress;
+            baseContract = BlockchainUtils.BlockchainFromFabric(QspaceID);
+            this.contentTypeAddress = BlockchainUtils.BlockchainFromFabric(contentTypeAddress);
+            this.libraryAddress = BlockchainUtils.BlockchainFromFabric(libraryAddress);
         }
-        public BlockchainPrimitives(string mainNet, string contractAddress, string contentTypeAddress, string libraryAddress) : base(mainNet)
+        public BlockchainPrimitives(string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
         {
             Key = EthECKey.GenerateKey().GetPrivateKeyAsBytes().ToHex();
-            CommonConstruct(contractAddress, contentTypeAddress, libraryAddress);
+            CommonConstruct(contentTypeAddress, libraryAddress);
         }
-        public BlockchainPrimitives(string key, string mainNet, string contractAddress, string contentTypeAddress, string libraryAddress) : base(mainNet)
+        public BlockchainPrimitives(string key, string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
         {
             Key = key;
-            CommonConstruct(contractAddress, contentTypeAddress, libraryAddress);
+            CommonConstruct(contentTypeAddress, libraryAddress);
         }
 
 
