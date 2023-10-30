@@ -138,8 +138,60 @@ namespace Eluvio
 
     }
 
-    public class ContentFabricUtils
+    public class ContentFabricClient : HttpHelper
     {
+        private void CommonConstruct(string contentTypeAddress, string libraryAddress)
+        {
+            account = new Nethereum.Web3.Accounts.Account(this.Key);
+            web3 = new Web3(this.account, EthURL);
+            baseContract = ContentFabricClient.BlockchainFromFabric(QspaceID);
+            this.contentTypeAddress = ContentFabricClient.BlockchainFromFabric(contentTypeAddress);
+            this.libraryAddress = ContentFabricClient.BlockchainFromFabric(libraryAddress);
+        }
+        public ContentFabricClient(string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
+        {
+            Key = EthECKey.GenerateKey().GetPrivateKeyAsBytes().ToHex();
+            CommonConstruct(contentTypeAddress, libraryAddress);
+        }
+        public ContentFabricClient(string key, string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
+        {
+            Key = key;
+            CommonConstruct(contentTypeAddress, libraryAddress);
+        }
+
+
+
+        public string MakeToken(string prefix, Dictionary<string, object> jsonToken)
+        {
+            var ethECKey = new EthECKey(Key);
+            jsonToken.Add("adr", ethECKey.GetPublicAddressAsBytes());
+            var tok = System.Text.Json.JsonSerializer.Serialize(jsonToken);
+            var strToken = tok;
+            byte[] hashedBytes = ContentFabricClient.DecodeString(new Sha3Keccack().CalculateHash(strToken));
+
+            byte[] signature = Array.Empty<byte>();
+            if (prefix[3] == 's')
+            {
+                signature = ContentFabricClient.SignMessage(ethECKey, hashedBytes);
+            }
+            // // Signing
+            byte[] concat = signature.Concat(Encoding.UTF8.GetBytes(strToken)).ToArray();
+
+            string signatureString = prefix + Base58.Bitcoin.Encode(concat);
+
+            return signatureString;
+
+        }
+
+        public string Key { get; private set; }
+        public Nethereum.Web3.Accounts.Account account;
+        public Web3 web3;
+        public string baseContract;
+        public string contentTypeAddress;
+
+        public string libraryAddress;
+
+
         public static string FabricIdFromBlckchainAdress(string prefix, string bcAdress)
         {
             if (bcAdress[..2] == "0x")
@@ -266,62 +318,6 @@ namespace Eluvio
             res.Wait();
             return res.Result;
         }
-
-    }
-
-    public class ContentFabricPrimitives : HttpHelper
-    {
-
-        private void CommonConstruct(string contentTypeAddress, string libraryAddress)
-        {
-            account = new Nethereum.Web3.Accounts.Account(this.Key);
-            web3 = new Web3(this.account, EthURL);
-            baseContract = ContentFabricUtils.BlockchainFromFabric(QspaceID);
-            this.contentTypeAddress = ContentFabricUtils.BlockchainFromFabric(contentTypeAddress);
-            this.libraryAddress = ContentFabricUtils.BlockchainFromFabric(libraryAddress);
-        }
-        public ContentFabricPrimitives(string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
-        {
-            Key = EthECKey.GenerateKey().GetPrivateKeyAsBytes().ToHex();
-            CommonConstruct(contentTypeAddress, libraryAddress);
-        }
-        public ContentFabricPrimitives(string key, string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
-        {
-            Key = key;
-            CommonConstruct(contentTypeAddress, libraryAddress);
-        }
-
-
-
-        public string MakeToken(string prefix, Dictionary<string, object> jsonToken)
-        {
-            var ethECKey = new EthECKey(Key);
-            jsonToken.Add("adr", ethECKey.GetPublicAddressAsBytes());
-            var tok = System.Text.Json.JsonSerializer.Serialize(jsonToken);
-            var strToken = tok;
-            byte[] hashedBytes = ContentFabricUtils.DecodeString(new Sha3Keccack().CalculateHash(strToken));
-
-            byte[] signature = Array.Empty<byte>();
-            if (prefix[3] == 's')
-            {
-                signature = ContentFabricUtils.SignMessage(ethECKey, hashedBytes);
-            }
-            // // Signing
-            byte[] concat = signature.Concat(Encoding.UTF8.GetBytes(strToken)).ToArray();
-
-            string signatureString = prefix + Base58.Bitcoin.Encode(concat);
-
-            return signatureString;
-
-        }
-
-        public string Key { get; private set; }
-        public Nethereum.Web3.Accounts.Account account;
-        public Web3 web3;
-        public string baseContract;
-        public string contentTypeAddress;
-
-        public string libraryAddress;
 
     }
 
