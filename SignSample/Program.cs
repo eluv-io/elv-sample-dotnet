@@ -112,8 +112,8 @@ class Program
         /// The password will need to be provided at runtime to avoid leaking in code.
         var passwordOption = app.Option("-p|--private <PRIVATE_KEY>", "The private key", CommandOptionType.SingleValue);
         var network = app.Option("-n|--network <network>", "eg -n demov3", CommandOptionType.SingleValue);
-        var contentTypeAddress = app.Option("-t|--type <Type>", "Content Type address eg -t \"0x0a5bc8d97be691970df876534a3433901fafe5d9\"", CommandOptionType.SingleValue);
-        var LibraryAddress = app.Option("-l|--library <Library>", "Library address eg -l \"0x76d5287501f6d8e3b72AA34545C9cbf951702C74\"", CommandOptionType.SingleValue);
+        var contentTypeAddress = app.Option("-t|--type <Type>", "Content Type address eg -t \"iq__9NTxhagnVXo3spsfBJkw3Y2dc2c\"", CommandOptionType.SingleValue);
+        var LibraryAddress = app.Option("-l|--library <Library>", "Library address eg -l \"ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD\"", CommandOptionType.SingleValue);
 
 
         app.OnExecute(() =>
