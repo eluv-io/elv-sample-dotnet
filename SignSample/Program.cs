@@ -26,35 +26,29 @@ class Program
     ///  5) Using write token from step 4, form some test metadata and set it on the write token calling update meta
     ///  6) Finalize the content
     ///  7) With the has acquired from finalization, call commit on the blockchain
-    static async Task<bool> DoSampleAsync(BlockchainPrimitives bcp)
+    static async Task<bool> DoSampleAsync(ContentFabricClient cfc, string contentTypeAddress, string libraryAddress)
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
-        var ct = bcp.contentTypeAddress;
-        var libAddress = bcp.libraryAddress;
-        var libid = BlockchainUtils.LibFromBlockchainAddress(libAddress);
         // Instantiate abi for space using user provided values for the qfab http endpoint and the base contract address 
-        var spaceService = new BaseContentSpaceService(bcp.web3, bcp.baseContract);
-
-        var content = await BlockchainUtils.CreateContent(spaceService, ct, libAddress);
-        var qid = BlockchainUtils.QIDFromBlockchainAddress(content);
-        Console.WriteLine("new content = {0} fabricID(QID) = {1}", content, qid);
+        var qid = await cfc.CreateContent(contentTypeAddress, libraryAddress);
+        Console.WriteLine("fabricID(QID) = {0}", qid);
         // Instantiate content using the new content address 
-        var newContentService = new BaseContentService(bcp.web3, content);
+        var newContentService = new BaseContentService(cfc.web3, ContentFabricClient.BlockchainFromFabric(qid));
         // Initiate the UpdateRequest
         var res = await newContentService.UpdateRequestRequestAndWaitForReceiptAsync();
         Console.WriteLine(String.Format("transaction hash for UpdateRequest= {0}", res.TransactionHash));
         // get byte rep of transaction hash
-        byte[] txhBytes = BlockchainUtils.DecodeString(res.TransactionHash);
+        byte[] txhBytes = ContentFabricClient.DecodeString(res.TransactionHash);
         Dictionary<string, object> updateJson = new()
                 {
-                    { "spc", BlockchainUtils.SpaceFromBlockchainAddress("0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3") },
+                    { "spc", cfc.QspaceID },
                     { "txh", Convert.ToBase64String(txhBytes) }
                 };
         // Make token accepts a dictionary to add to the json token also create a signed json transaction token atxsj_
-        var token = bcp.MakeToken("atxsj_", updateJson);
+        var token = cfc.MakeToken("atxsj_", updateJson);
         Console.WriteLine(" Token = {0}", token);
         // Call qfab's http handler and request edit on the new qid with the newly constructed token
-        var ec = await bcp.CallEditContent(token, libid, qid);
+        var ec = await cfc.CallEditContent(token, libraryAddress, qid);
         // parse json result and extract the write_token
         JObject ecValues = JObject.Parse(ec);
         var qwt = ecValues["write_token"].ToString();
@@ -62,20 +56,19 @@ class Program
         // new meta to add to our content object
         string newMeta = "{\"key1\":{\"subkey1\":[\"value1\", \"value2\", \"value3\"]}}";
         // Call qfabs http handler for update meta using the newMeta to add
-        await bcp.UpdateMetadata(token, libid, qwt, JObject.Parse(newMeta));
+        await cfc.UpdateMetadata(token, libraryAddress, qwt, JObject.Parse(newMeta));
         // Call qfabs http handler to Finalize our new content
-        var fin = await bcp.FinalizeContent(token, libid, qwt);
+        var fin = await cfc.FinalizeContent(token, libraryAddress, qwt);
         Console.WriteLine("finalized output = {0}", fin);
         JObject finVals = JObject.Parse(fin);
         var hash = finVals["hash"].ToString();
 
-        var decHash = BlockchainUtils.BlockchainFromFabric(hash);
+        var decHash = ContentFabricClient.BlockchainFromFabric(hash);
         // decHash == content
         Console.WriteLine("hash = {0} dec = {1}", hash, decHash);
         // Instantiate a new Content service using the blockchain address from the hash from the return of FinalizeContent
-        var commitService = new BaseContentService(bcp.web3, decHash);
         // Call Commit on the new qfab hash
-        var commitReceipt = BlockchainUtils.Commit(commitService, hash);
+        var commitReceipt = ContentFabricClient.Commit(newContentService, hash);
         var cpe = commitReceipt.Logs.DecodeAllEvents<CommitPendingEventDTO>();
         if (cpe.Count > 0)
         {
@@ -87,12 +80,12 @@ class Program
         }
         return true;
     }
-    static int DoSample(string pwd, string ep, string contentTypeAddress, string libraryAddress)
+    static int DoSample(string pwd, string net, string contentTypeAddress, string libraryAddress)
     {
         try
         {
-            BlockchainPrimitives bcp = new(pwd, ep, contentTypeAddress, libraryAddress);
-            var f = DoSampleAsync(bcp);
+            ContentFabricClient cfc = new(pwd, net);
+            var f = DoSampleAsync(cfc, contentTypeAddress, libraryAddress);
             f.Wait();
         }
         catch (Exception e)
@@ -110,7 +103,7 @@ class Program
 
         /// Reasonable sample values are provided in the usage message
         /// The password will need to be provided at runtime to avoid leaking in code.
-        var passwordOption = app.Option("-p|--private <PRIVATE_KEY>", "The private key", CommandOptionType.SingleValue);
+        var privateKey = app.Option("-p|--private <PRIVATE_KEY>", "The private key", CommandOptionType.SingleValue);
         var network = app.Option("-n|--network <network>", "eg -n demov3", CommandOptionType.SingleValue);
         var contentTypeAddress = app.Option("-t|--type <Type>", "Content Type address eg -t \"iq__9NTxhagnVXo3spsfBJkw3Y2dc2c\"", CommandOptionType.SingleValue);
         var LibraryAddress = app.Option("-l|--library <Library>", "Library address eg -l \"ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD\"", CommandOptionType.SingleValue);
@@ -118,7 +111,7 @@ class Program
 
         app.OnExecute(() =>
         {
-            List<CommandOption> optionsList = new() { passwordOption, network, contentTypeAddress, LibraryAddress };
+            List<CommandOption> optionsList = new() { privateKey, network, contentTypeAddress, LibraryAddress };
             List<string> optionVals = new() { "", "", "", "" };
             var iOption = 0;
             // Access the elements in the list
