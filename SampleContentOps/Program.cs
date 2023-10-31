@@ -6,7 +6,7 @@ using McMaster.Extensions.CommandLineUtils;
 using Elv.NET.Contracts.BaseContentSpace;
 using Elv.NET.Contracts.BaseContentSpace.ContractDefinition;
 
-namespace SignSample;
+namespace SampleContentOps;
 
 class Program
 {

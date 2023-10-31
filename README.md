@@ -29,7 +29,7 @@ Information needed:
 - A Content Type (for example the tenant 'Title' content type)
 
 ```
-./SignSample/bin/Debug/net6.0/SignSample -n "demov3" -p "private_key" -t "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c" -l "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD"
+./SampleContentOps/bin/Debug/net6.0/SampleContentOps -n "demov3" -p "private_key" -t "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c" -l "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD"
 ``````
 
 Output
