@@ -1,34 +1,51 @@
 # elv-sample-dotnet
-dotnet runtimes for the Eluvio content fabric
 
-## install .net
+
+Eluvio Content Fabric .NET Client SDK
+
+## Install .NET
+
 https://learn.microsoft.com/en-us/dotnet/core/install/
 
-## building
+## Build
+
+```
 dotnet build elv-sample-dotnet.sln  -c Debug
+```
 
-## clean
+### Clean
+
+```
 dotnet clean elv-sample-dotnet.sln
+```
 
-## running
+## Run Sample
+
+Information needed:
+
+- A tenancy on the Conent Fabric network 'main' or 'demov3'
+- A private key for a user within the tenancy
+- A Content Library (for example `ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD`)
+- A Content Type (for example the tenant 'Title' content type)
+
 ```
 ./SignSample/bin/Debug/net6.0/SignSample -n "demov3" -p "private_key" -t "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c" -l "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD"
 ``````
 
-**Output:** </br>
+Output
+
 ```
-new content = 0x5D708d387bEA58CBa1b1BBab3897e4275Ad6ED7e fabricID(QID) = iq__2JWAELGjg9YrBgTN6xFV4LS6XBhf
-transaction hash for UpdateRequest= 0x3b78b4bedc04351c5648d259b4031ab7858fd026e5caf83d9c11c55c792b30f7
- Token = atxsj_21MqwLSqFczUFJjuRnJz1c2LuHDVumz6xqM5pqJb4nzroTygQAd85wNY536fNwYm3bNmDgExrPNRxb9BBtxWMrWXiYCj28Lp413yXNo2CbehBsApiHKzGfqDoPJCUkyB1FDKFiCsaxLcPmPPP2QA71tvYip63iqTEUNHgZmwTQFbQ4mQDFrE2Bdm17M2Pw4W619V5PCHmm3HmzFGViugwpr4YbFvwWpbtQ7mcQ9Au6BChKLkUmMtE1YNabMx9GPyFaeVuTcx89ARoi
-'https://host-76-74-28-235.contentfabric.io/qlibs/ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD/q/iq__2JWAELGjg9YrBgTN6xFV4LS6XBhf?authorization=atxsj_21MqwLSqFczUFJjuRnJz1c2LuHDVumz6xqM5pqJb4nzroTygQAd85wNY536fNwYm3bNmDgExrPNRxb9BBtxWMrWXiYCj28Lp413yXNo2CbehBsApiHKzGfqDoPJCUkyB1FDKFiCsaxLcPmPPP2QA71tvYip63iqTEUNHgZmwTQFbQ4mQDFrE2Bdm17M2Pw4W619V5PCHmm3HmzFGViugwpr4YbFvwWpbtQ7mcQ9Au6BChKLkUmMtE1YNabMx9GPyFaeVuTcx89ARoi'
-write_token = tqw__HSTeVEiY9itEmNj8rdaG8k65BrqPrzVsgW8cannbBtMh6vhkq5LT7tjaxbGKUQkbFntNrfxF9rLmBBCXVpG
-'https://host-76-74-28-235.contentfabric.io/qlibs/ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD/q/tqw__HSTeVEiY9itEmNj8rdaG8k65BrqPrzVsgW8cannbBtMh6vhkq5LT7tjaxbGKUQkbFntNrfxF9rLmBBCXVpG/meta?authorization=atxsj_21MqwLSqFczUFJjuRnJz1c2LuHDVumz6xqM5pqJb4nzroTygQAd85wNY536fNwYm3bNmDgExrPNRxb9BBtxWMrWXiYCj28Lp413yXNo2CbehBsApiHKzGfqDoPJCUkyB1FDKFiCsaxLcPmPPP2QA71tvYip63iqTEUNHgZmwTQFbQ4mQDFrE2Bdm17M2Pw4W619V5PCHmm3HmzFGViugwpr4YbFvwWpbtQ7mcQ9Au6BChKLkUmMtE1YNabMx9GPyFaeVuTcx89ARoi'
-'https://host-76-74-28-235.contentfabric.io/qlibs/ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD/q/tqw__HSTeVEiY9itEmNj8rdaG8k65BrqPrzVsgW8cannbBtMh6vhkq5LT7tjaxbGKUQkbFntNrfxF9rLmBBCXVpG?authorization=atxsj_21MqwLSqFczUFJjuRnJz1c2LuHDVumz6xqM5pqJb4nzroTygQAd85wNY536fNwYm3bNmDgExrPNRxb9BBtxWMrWXiYCj28Lp413yXNo2CbehBsApiHKzGfqDoPJCUkyB1FDKFiCsaxLcPmPPP2QA71tvYip63iqTEUNHgZmwTQFbQ4mQDFrE2Bdm17M2Pw4W619V5PCHmm3HmzFGViugwpr4YbFvwWpbtQ7mcQ9Au6BChKLkUmMtE1YNabMx9GPyFaeVuTcx89ARoi'
-finalized output = {"id":"iq__2JWAELGjg9YrBgTN6xFV4LS6XBhf","hash":"hq__MWGVMUYp1YWWBi9p6Mc2wfujYgbv5vd4oeHjsKBz8D3x1rwhPJYE6hkXG3PYKckjSqZioXEzaR","write_token":"tqw__HSTeVEiY9itEmNj8rdaG8k65BrqPrzVsgW8cannbBtMh6vhkq5LT7tjaxbGKUQkbFntNrfxF9rLmBBCXVpG","type":"","qlib_id":"ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD"}
-hash = hq__MWGVMUYp1YWWBi9p6Mc2wfujYgbv5vd4oeHjsKBz8D3x1rwhPJYE6hkXG3PYKckjSqZioXEzaR dec = 0x5D708D387BEA58CBA1B1BBAB3897E4275AD6ED7E
-commitReceipt tx hash = 0x6c4b08d7ca4f8faa2f51bb741e708bf822b8fdfe62cc59e2ae50263d74ded3a6, tx idx 0, hash pending hq__MWGVMUYp1YWWBi9p6Mc2wfujYgbv5vd4oeHjsKBz8D3x1rwhPJYE6hkXG3PYKckjSqZioXEzaR
+content object ID = iq__2ygmMWogfVPasM1SS6bYTCwL3MPQ
+
+transaction hash for UpdateRequest= 0xbed5dbbd5581cbc23d959a3a94979d9b8692246f3e6ca82d0fe2b1e59ef76037
+
+content fabric 'edit' access token = atxsj_p4KoaRUXxn8ueSTCgv9mBEMSzSzb5MVEUtTmpo7eTWdiqaGM9okaxcrTY5LLym7JrqAbzNuUGXWubYodu91s3ZHxK9EohAHZy6M2EzUjM5C8M5hzNf47oHWGWrJURfpZdgBNz9HsmxohXcvPu5VK6suvMEoYVzMCPHUSXGm2XemrDU68HgCpm4TuW9YxES5ex8nEzyEFrQtBNX81jitMMKrXGfCj8M7QiWXZioGLiMwW7hvDHBoJe7HuBtKLiyiG7z6WUQhCtVnjZWMbZvy9bdfFcg
+
+content write token = tqw__HSVbQbmSxKV3QLUimLePhg8E8q6w4cq7cWSPgcbvHDCzWj5GDVZJAVSe8XzNwfoghLDu2FdxDMfbX4H3duv
+
+new content hash = hq__6wFJdbSm4DdM5hotjudxhYgJ2NQLnXrCacfcRNaYzLvxBhXkdQEXizVcd2Z1ochYzNwfAxnoX8
+
+commit tx hash = 0x54c095e909b50f477a0783cc12314cef44a2dd534627b3499b903195c558fecd, hash pending hq__6wFJdbSm4DdM5hotjudxhYgJ2NQLnXrCacfcRNaYzLvxBhXkdQEXizVcd2Z1ochYzNwfAxnoX8
 ```
 
-
-Check the frowser in lib for existence of **hq__MWGVMUYp1YWWBi9p6Mc2wfujYgbv5vd4oeHjsKBz8D3x1rwhPJYE6hkXG3PYKckjSqZioXEzaR**
-
+A new content is created in the specified content library. The new content ID and hash are printed out by the sample.
