@@ -40,9 +40,9 @@ namespace libtest
                 {
                     Assert.Fail("Need a password!!");
                 }
-                ContentFabricClient bcp = new(pwd, "demov3", "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c", "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD");
+                ContentFabricClient cfc = new(pwd, "demov3");
                 Console.OutputEncoding = System.Text.Encoding.UTF8;
-                Debug.WriteLine(string.Format("MyFunkyKey = {0}", bcp.Key));
+                Debug.WriteLine(string.Format("MyFunkyKey = {0}", cfc.Key));
                 var spaceID = "66699ab88";
                 Dictionary<string, object> jsonUpdate = new()
             {
@@ -62,22 +62,22 @@ namespace libtest
                 {"gra", "update"},
                 {"exp", -1},
             };
-                var tupdate = bcp.MakeToken("ascsj_", jsonUpdate);
+                var tupdate = cfc.MakeToken("ascsj_", jsonUpdate);
                 TestContext.Progress.WriteLine(string.Format("Token Update = {0}", tupdate));
-                var tupdateu = bcp.MakeToken("ascuj_", jupdate2);
+                var tupdateu = cfc.MakeToken("ascuj_", jupdate2);
                 TestContext.Progress.WriteLine(string.Format("Token Update = {0}", tupdateu));
                 Dictionary<string, object> jsonTxn = new()
             {
                 { "spc", $"ispc{spaceID}" },
             };
-                var t = bcp.MakeToken("atxsj_", jsonTxn);
+                var t = cfc.MakeToken("atxsj_", jsonTxn);
                 //Assert.AreNotEqual(t.Result, null);
                 TestContext.Progress.WriteLine(string.Format("Token = {0}", t));
                 Dictionary<string, object> jsonU = new()
             {
                 { "spc", $"ispc{spaceID}" },
             };
-                var tl = bcp.MakeToken("atxuj_", jsonU);
+                var tl = cfc.MakeToken("atxuj_", jsonU);
                 TestContext.Progress.WriteLine(string.Format("Token u = {0}", tl));
             }
             catch (Exception e)
@@ -118,15 +118,15 @@ namespace libtest
                 {
                     Assert.Fail("Need a password!!");
                 }
-                ContentFabricClient bcp = new(pwd, "demov3", "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c", "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD");
+                ContentFabricClient cfc = new(pwd, "demov3");
                 Console.OutputEncoding = System.Text.Encoding.UTF8;
-                var spaceService = new BaseContentSpaceService(bcp.web3, bcp.baseContract);
+                var spaceService = new BaseContentSpaceService(cfc.web3, cfc.baseContract);
 
                 var ct = "0x0a5bc8d97be691970df876534a3433901fafe5d9";
                 TestContext.Progress.WriteLine("content type = {0}", ct);
                 var libAddress = "0x76d5287501f6d8e3b72AA34545C9cbf951702C74";
                 var libid = ContentFabricClient.LibFromBlockchainAddress(libAddress);
-                var content = ContentFabricClient.CreateContent(spaceService, ct, libAddress);
+                var content = cfc.CreateContent(ct, libAddress);
                 content.Wait();
                 TestContext.Progress.WriteLine("content = {0} QID = {1}", content.Result, ContentFabricClient.QIDFromBlockchainAddress(content.Result));
                 Assert.Multiple(() =>
@@ -134,7 +134,7 @@ namespace libtest
                     Assert.That(content.IsCompletedSuccessfully);
                     Assert.That(content.Result, Is.Not.EqualTo(""));
                 });
-                var newContentService = new BaseContentService(bcp.web3, content.Result);
+                var newContentService = new BaseContentService(cfc.web3, content.Result);
                 var res = newContentService.UpdateRequestRequestAndWaitForReceiptAsync();
                 res.Wait();
                 var qid = ContentFabricClient.QIDFromBlockchainAddress(content.Result);
@@ -145,9 +145,9 @@ namespace libtest
                     { "spc", ContentFabricClient.SpaceFromBlockchainAddress("0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3") },
                     { "txh", Convert.ToBase64String(txhBytes) }
                 };
-                var token = bcp.MakeToken("atxsj_", updateJson);
+                var token = cfc.MakeToken("atxsj_", updateJson);
                 Console.WriteLine(" Token = {0} \n content = {1}\n fabid = {2}", token, content, qid);
-                var ec = bcp.CallEditContent(token, libid, qid);
+                var ec = cfc.CallEditContent(token, libid, qid);
                 ec.Wait();
                 Console.WriteLine(String.Format("Edit returns: content {0}", ec));
                 JObject ecValues = JObject.Parse(ec.Result);
@@ -158,10 +158,10 @@ namespace libtest
                 Console.WriteLine("write_token = {0}", qwt);
                 string newMeta = "{\"key1\":{\"subkey1\":[\"value1\", \"value2\", \"value3\"]}}";
 
-                var um = bcp.UpdateMetadata(token, libid, qwt, JObject.Parse(newMeta));
+                var um = cfc.UpdateMetadata(token, libid, qwt, JObject.Parse(newMeta));
                 um.Wait();
 
-                var fin = bcp.FinalizeContent(token, libid, qwt);
+                var fin = cfc.FinalizeContent(token, libid, qwt);
                 fin.Wait();
                 Console.WriteLine("finalized output = {0}", fin);
                 JObject finVals = JObject.Parse(fin.Result);
@@ -173,7 +173,7 @@ namespace libtest
                 Assert.That(decHash[2..], Is.EqualTo(MakeUpper(content.Result[2..])));
                 // decHash == content
                 Console.WriteLine("hash = {0} dec = {1}", hash, decHash);
-                var commitService = new BaseContentService(bcp.web3, decHash);
+                var commitService = new BaseContentService(cfc.web3, decHash);
 
                 var commitReceipt = ContentFabricClient.Commit(commitService, hash);
                 var cpe = commitReceipt.Logs.DecodeAllEvents<Elv.NET.Contracts.BaseContentSpace.ContractDefinition.CommitPendingEventDTO>();

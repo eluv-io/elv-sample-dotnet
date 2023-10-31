@@ -140,23 +140,25 @@ namespace Eluvio
 
     public class ContentFabricClient : HttpHelper
     {
-        private void CommonConstruct(string contentTypeAddress, string libraryAddress)
+        private void CommonConstruct()
         {
             account = new Nethereum.Web3.Accounts.Account(this.Key);
             web3 = new Web3(this.account, EthURL);
             baseContract = ContentFabricClient.BlockchainFromFabric(QspaceID);
-            this.contentTypeAddress = ContentFabricClient.BlockchainFromFabric(contentTypeAddress);
-            this.libraryAddress = ContentFabricClient.BlockchainFromFabric(libraryAddress);
+            // this.contentTypeAddress = ContentFabricClient.BlockchainFromFabric(contentTypeAddress);
+            // this.libraryAddress = ContentFabricClient.BlockchainFromFabric(libraryAddress);
+            this.spaceService = new BaseContentSpaceService(web3, baseContract);
+
         }
-        public ContentFabricClient(string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
+        public ContentFabricClient(string mainNet) : base(mainNet)
         {
             Key = EthECKey.GenerateKey().GetPrivateKeyAsBytes().ToHex();
-            CommonConstruct(contentTypeAddress, libraryAddress);
+            CommonConstruct();
         }
-        public ContentFabricClient(string key, string mainNet, string contentTypeAddress, string libraryAddress) : base(mainNet)
+        public ContentFabricClient(string key, string mainNet) : base(mainNet)
         {
             Key = key;
-            CommonConstruct(contentTypeAddress, libraryAddress);
+            CommonConstruct();
         }
 
 
@@ -187,9 +189,8 @@ namespace Eluvio
         public Nethereum.Web3.Accounts.Account account;
         public Web3 web3;
         public string baseContract;
-        public string contentTypeAddress;
 
-        public string libraryAddress;
+        public BaseContentSpaceService spaceService;
 
 
         public static string FabricIdFromBlckchainAdress(string prefix, string bcAdress)
@@ -278,14 +279,14 @@ namespace Eluvio
             return decoded;
         }
 
-        public static async Task<string> CreateContentType(BaseContentSpaceService spaceService)
+        public async Task<string> CreateContentType()
         {
             var ct = await spaceService.CreateContentTypeRequestAndWaitForReceiptAsync();
             var cctReceipt = ct.DecodeAllEvents<CreateContentTypeEventDTO>();
             return cctReceipt[0].Event.ContentTypeAddress;
         }
 
-        public static async Task<string> CreateLibrary(BaseContentSpaceService spaceService, string space)
+        public async Task<string> CreateLibrary(string space)
         {
             // should be using space "0x501382E5f15501427D1Fc3d93e949C96b25A2224"
             var lib = await spaceService.CreateLibraryRequestAndWaitForReceiptAsync(space);
@@ -293,13 +294,13 @@ namespace Eluvio
             return libReceipt[0].Event.LibraryAddress;
         }
 
-        public static async Task<string> CreateContent(BaseContentSpaceService spaceService, string contentTypeAddress, string libraryAddress)
+        public async Task<string> CreateContent(string contentTypeAddress, string libraryAddress)
         {
-            var content = await spaceService.CreateContentRequestAndWaitForReceiptAsync(libraryAddress, contentTypeAddress);
+            var content = await spaceService.CreateContentRequestAndWaitForReceiptAsync(ContentFabricClient.BlockchainFromFabric(libraryAddress), ContentFabricClient.BlockchainFromFabric(contentTypeAddress));
             var contentReceipt = content.DecodeAllEvents<CreateContentEventDTO>();
-            return contentReceipt[0].Event.ContentAddress;
+            return ContentFabricClient.QIDFromBlockchainAddress(contentReceipt[0].Event.ContentAddress);
         }
-        public static Nethereum.RPC.Eth.DTOs.TransactionReceipt UpdateRequest(BaseContentService contentService, string contractAddress)
+        public static Nethereum.RPC.Eth.DTOs.TransactionReceipt UpdateRequest(BaseContentService contentService)
         {
             var res = contentService.UpdateRequestRequestAndWaitForReceiptAsync();
             res.Wait();
