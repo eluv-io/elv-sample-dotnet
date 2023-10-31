@@ -104,7 +104,6 @@ namespace Eluvio
         private string GetBaseURL(string token, string libid, string qid, string format)
         {
             var url = currentNode + String.Format(format, libid, qid);
-            Console.WriteLine("'{0}?authorization={1}'", url, token);
             return url;
         }
         public async Task<string> CallEditContent(string token, string libid, string qid)

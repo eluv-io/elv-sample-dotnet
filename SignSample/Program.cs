@@ -64,18 +64,19 @@ class Program
         // Finalize the content write token - this creates a new content hash (a new 'version' of the content)
         var fin = await cfc.FinalizeContent(token, libraryAddress, qwt);
         JObject finVals = JObject.Parse(fin);
-        var hash = finVals["content hash"].ToString();
+        var hash = finVals["hash"].ToString();
+        Console.WriteLine("new content hash = {0}", hash);
 
         // Commit the new content hash
         var commitReceipt = ContentFabricClient.Commit(newContentService, hash);
         var cpe = commitReceipt.Logs.DecodeAllEvents<CommitPendingEventDTO>();
         if (cpe.Count > 0)
         {
-            Console.WriteLine("commitReceipt tx hash = {0}, tx idx {1}, hash pending {2}", commitReceipt.TransactionHash, commitReceipt.TransactionIndex, cpe[0].Event.ObjectHash);
+            Console.WriteLine("commit tx hash = {0}, hash pending {1}", commitReceipt.TransactionHash, cpe[0].Event.ObjectHash);
         }
         else
         {
-            Console.WriteLine("commitReceipt status = {0}, No Events", commitReceipt.Status);
+            Console.WriteLine("commit failed - no events, status = {0}", commitReceipt.Status);
         }
         return true;
     }
