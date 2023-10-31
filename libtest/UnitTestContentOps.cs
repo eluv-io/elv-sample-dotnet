@@ -122,32 +122,32 @@ namespace libtest
                 Console.OutputEncoding = System.Text.Encoding.UTF8;
                 var spaceService = new BaseContentSpaceService(cfc.web3, cfc.baseContract);
 
-                var ct = "0x0a5bc8d97be691970df876534a3433901fafe5d9";
+                var ct = "iq__9NTxhagnVXo3spsfBJkw3Y2dc2c";
                 TestContext.Progress.WriteLine("content type = {0}", ct);
-                var libAddress = "0x76d5287501f6d8e3b72AA34545C9cbf951702C74";
-                var libid = ContentFabricClient.LibFromBlockchainAddress(libAddress);
+                var libAddress = "ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD";
                 var content = cfc.CreateContent(ct, libAddress);
                 content.Wait();
-                TestContext.Progress.WriteLine("content = {0} QID = {1}", content.Result, ContentFabricClient.QIDFromBlockchainAddress(content.Result));
+                TestContext.Progress.WriteLine("QID = {0}", content.Result);
                 Assert.Multiple(() =>
                 {
                     Assert.That(content.IsCompletedSuccessfully);
                     Assert.That(content.Result, Is.Not.EqualTo(""));
                 });
-                var newContentService = new BaseContentService(cfc.web3, content.Result);
+                var contentBCAddress = ContentFabricClient.BlockchainFromFabric(content.Result);
+                var newContentService = new BaseContentService(cfc.web3, contentBCAddress);
                 var res = newContentService.UpdateRequestRequestAndWaitForReceiptAsync();
                 res.Wait();
-                var qid = ContentFabricClient.QIDFromBlockchainAddress(content.Result);
+                var qid = content.Result;
                 Console.WriteLine(String.Format("transaction hash = {0}", res.Result.TransactionHash));
                 byte[] txhBytes = ContentFabricClient.DecodeString(res.Result.TransactionHash);
                 Dictionary<string, object> updateJson = new()
                 {
-                    { "spc", ContentFabricClient.SpaceFromBlockchainAddress("0x9b29360efb1169c801bbcbe8e50d0664dcbc78d3") },
+                    { "spc", cfc.QspaceID },
                     { "txh", Convert.ToBase64String(txhBytes) }
                 };
                 var token = cfc.MakeToken("atxsj_", updateJson);
                 Console.WriteLine(" Token = {0} \n content = {1}\n fabid = {2}", token, content, qid);
-                var ec = cfc.CallEditContent(token, libid, qid);
+                var ec = cfc.CallEditContent(token, libAddress, qid);
                 ec.Wait();
                 Console.WriteLine(String.Format("Edit returns: content {0}", ec));
                 JObject ecValues = JObject.Parse(ec.Result);
@@ -158,10 +158,10 @@ namespace libtest
                 Console.WriteLine("write_token = {0}", qwt);
                 string newMeta = "{\"key1\":{\"subkey1\":[\"value1\", \"value2\", \"value3\"]}}";
 
-                var um = cfc.UpdateMetadata(token, libid, qwt, JObject.Parse(newMeta));
+                var um = cfc.UpdateMetadata(token, libAddress, qwt, JObject.Parse(newMeta));
                 um.Wait();
 
-                var fin = cfc.FinalizeContent(token, libid, qwt);
+                var fin = cfc.FinalizeContent(token, libAddress, qwt);
                 fin.Wait();
                 Console.WriteLine("finalized output = {0}", fin);
                 JObject finVals = JObject.Parse(fin.Result);
@@ -170,7 +170,7 @@ namespace libtest
                 var hash = finVals["hash"].ToString();
 
                 var decHash = ContentFabricClient.BlockchainFromFabric(hash);
-                Assert.That(decHash[2..], Is.EqualTo(MakeUpper(content.Result[2..])));
+                Assert.That(decHash[2..], Is.EqualTo(MakeUpper(contentBCAddress[2..])));
                 // decHash == content
                 Console.WriteLine("hash = {0} dec = {1}", hash, decHash);
                 var commitService = new BaseContentService(cfc.web3, decHash);

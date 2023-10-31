@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lib", "lib\lib.csproj", "{1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libtest", "libtest\libtest.csproj", "{E9E42980-6EC6-43B2-9495-B9469A9C0B3A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignSample", "SignSample\SignSample.csproj", "{ADF78BBC-F5EA-4439-B583-3B674DAF4743}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleContentOps", "SampleContentOps\SampleContentOps.csproj", "{ADF78BBC-F5EA-4439-B583-3B674DAF4743}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
