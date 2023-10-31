@@ -10,73 +10,73 @@ namespace SignSample;
 
 class Program
 {
-    /// This example performs a number of operations in order to create content on the blockchain
-    /// and to mirror those changes to the content fabric
-    /// The sequence of steps are as follows
-    /// Given the following input:
-    ///   - private key 
-    ///   - Main Net endpoint 
-    ///   - contract Address
-    ///   - content Type Address, 
-    ///   - Library Address
-    ///  1) Instantiate a BaseContentSpaceService (baseContentSpace.abi) and call CreateContent which creates new content on the blockchain
-    ///  2) With new content address instantiate a BaseContentService (baseContent.abi) and make an UpdateRequest
-    ///  3) Using the TransactionId from step 2 form an Eluvio Token
-    ///  4) Using the new token from Step 3, call Edit on the new content
-    ///  5) Using write token from step 4, form some test metadata and set it on the write token calling update meta
-    ///  6) Finalize the content
-    ///  7) With the has acquired from finalization, call commit on the blockchain
+    /// This example performs a number of operations in order to illustrate the bascis of creating and
+    /// updating a 'content object' in the Content Fabric.
+    ///
+    /// Input:
+    ///   - pivate key for a user in the tenancy
+    ///   - library ID
+    ///   - content type ID
+    ///
+    /// Steps performed:
+    ///   1) Create a new content object
+    ///   2) Perform an UpdateRequest transaction - this is required to create an 'edit' access token
+    ///   3) Create an 'edit' access token
+    ///   4) Edit the content object - this returns a 'write token'
+    ///   5) Set content object metadata
+    ///   6) Finalize the content - this returns a new content hash
+    ///   7) Commit the new content hash
     static async Task<bool> DoSampleAsync(ContentFabricClient cfc, string contentTypeAddress, string libraryAddress)
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
-        // Instantiate abi for space using user provided values for the qfab http endpoint and the base contract address 
+
+        // Create a new Content Object in the specified Content Library
         var qid = await cfc.CreateContent(contentTypeAddress, libraryAddress);
-        Console.WriteLine("fabricID(QID) = {0}", qid);
-        // Instantiate content using the new content address 
+        Console.WriteLine("content object ID = {0}", qid);
+
+        // Perform an 'update request' transaction, needed for creating a content fabric 'edit' acccess token
         var newContentService = new BaseContentService(cfc.web3, ContentFabricClient.BlockchainFromFabric(qid));
-        // Initiate the UpdateRequest
         var res = await newContentService.UpdateRequestRequestAndWaitForReceiptAsync();
         Console.WriteLine(String.Format("transaction hash for UpdateRequest= {0}", res.TransactionHash));
-        // get byte rep of transaction hash
+
+        // Make the content fabric 'edit' access token using the transaction hash obtained above
         byte[] txhBytes = ContentFabricClient.DecodeString(res.TransactionHash);
         Dictionary<string, object> updateJson = new()
                 {
                     { "spc", cfc.QspaceID },
                     { "txh", Convert.ToBase64String(txhBytes) }
                 };
-        // Make token accepts a dictionary to add to the json token also create a signed json transaction token atxsj_
         var token = cfc.MakeToken("atxsj_", updateJson);
-        Console.WriteLine(" Token = {0}", token);
-        // Call qfab's http handler and request edit on the new qid with the newly constructed token
+        Console.WriteLine("content fabric 'edit' access token = {0}", token);
+
+        // Open the Content Object for writing - this returns a 'content write token'
         var ec = await cfc.CallEditContent(token, libraryAddress, qid);
-        // parse json result and extract the write_token
         JObject ecValues = JObject.Parse(ec);
         var qwt = ecValues["write_token"].ToString();
-        Console.WriteLine("write_token = {0}", qwt);
-        // new meta to add to our content object
+        Console.WriteLine("content write token = {0}", qwt);
+
+        // Prepare sample JSON metadata to write to the Content Object
         string newMeta = "{\"key1\":{\"subkey1\":[\"value1\", \"value2\", \"value3\"]}}";
-        // Call qfabs http handler for update meta using the newMeta to add
+
+        // Write JSON metadata to the Content Object
         await cfc.UpdateMetadata(token, libraryAddress, qwt, JObject.Parse(newMeta));
-        // Call qfabs http handler to Finalize our new content
+
+        // Finalize the content write token - this creates a new content hash (a new 'version' of the content)
         var fin = await cfc.FinalizeContent(token, libraryAddress, qwt);
-        Console.WriteLine("finalized output = {0}", fin);
         JObject finVals = JObject.Parse(fin);
         var hash = finVals["hash"].ToString();
+        Console.WriteLine("new content hash = {0}", hash);
 
-        var decHash = ContentFabricClient.BlockchainFromFabric(hash);
-        // decHash == content
-        Console.WriteLine("hash = {0} dec = {1}", hash, decHash);
-        // Instantiate a new Content service using the blockchain address from the hash from the return of FinalizeContent
-        // Call Commit on the new qfab hash
+        // Commit the new content hash
         var commitReceipt = ContentFabricClient.Commit(newContentService, hash);
         var cpe = commitReceipt.Logs.DecodeAllEvents<CommitPendingEventDTO>();
         if (cpe.Count > 0)
         {
-            Console.WriteLine("commitReceipt tx hash = {0}, tx idx {1}, hash pending {2}", commitReceipt.TransactionHash, commitReceipt.TransactionIndex, cpe[0].Event.ObjectHash);
+            Console.WriteLine("commit tx hash = {0}, hash pending {1}", commitReceipt.TransactionHash, cpe[0].Event.ObjectHash);
         }
         else
         {
-            Console.WriteLine("commitReceipt status = {0}, No Events", commitReceipt.Status);
+            Console.WriteLine("commit failed - no events, status = {0}", commitReceipt.Status);
         }
         return true;
     }
@@ -101,12 +101,10 @@ class Program
 
         app.HelpOption();
 
-        /// Reasonable sample values are provided in the usage message
-        /// The password will need to be provided at runtime to avoid leaking in code.
         var privateKey = app.Option("-p|--private <PRIVATE_KEY>", "The private key", CommandOptionType.SingleValue);
-        var network = app.Option("-n|--network <network>", "eg -n demov3", CommandOptionType.SingleValue);
-        var contentTypeAddress = app.Option("-t|--type <Type>", "Content Type address eg -t \"iq__9NTxhagnVXo3spsfBJkw3Y2dc2c\"", CommandOptionType.SingleValue);
-        var LibraryAddress = app.Option("-l|--library <Library>", "Library address eg -l \"ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD\"", CommandOptionType.SingleValue);
+        var network = app.Option("-n|--network <network>", "Content Fabric network: main or demov3", CommandOptionType.SingleValue);
+        var contentTypeAddress = app.Option("-t|--type <Type>", "Content Type address eg \"iq__9NTxhagnVXo3spsfBJkw3Y2dc2c\"", CommandOptionType.SingleValue);
+        var LibraryAddress = app.Option("-l|--library <Library>", "Content Library address eg \"ilib2f2ES7AB6rZVvLQqBkLNqAj7GTMD\"", CommandOptionType.SingleValue);
 
 
         app.OnExecute(() =>
